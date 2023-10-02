@@ -30,7 +30,15 @@ app.use("/add-product", (req, res, next) => {
   // and we don't want to call next middleware in line
 });
 
-app.use("/product", (req, res, next) => {
+// note this /product middlware always executes not just for POST requests but for get, put and others
+// so to restrict it to only POST requests we can use app.post()
+/*
+  So it will change from 
+  app.use("/product", (req, res, next) => {}
+  to
+  app.post("/product", (req, res, next) => {}
+*/
+app.post("/product", (req, res, next) => {
   // logging incoming request body
   console.log(req.body);
   res.redirect("/");
