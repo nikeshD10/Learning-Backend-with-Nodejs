@@ -1,6 +1,7 @@
 const express = require("express");
 const path = require("path");
 const router = express.Router();
+const rootDir = require("../util/path");
 
 router.get("/", (req, res, next) => {
   // to construct path to the views shop.html we can use the path module provided by nodejs
@@ -12,7 +13,8 @@ router.get("/", (req, res, next) => {
   // "views" is the folder which holds the html files
   // "shop.html" is the html file we want to send
 
-  res.sendFile(path.join(__dirname, "../", "views", "shop.html"));
+  // res.sendFile(path.join(__dirname, "../", "views", "shop.html"));
+  res.sendFile(path.join(rootDir, "../", "views", "shop.html"));
 });
 
 module.exports = router;
