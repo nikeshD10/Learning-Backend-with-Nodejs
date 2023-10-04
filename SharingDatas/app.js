@@ -7,6 +7,14 @@ const rootDir = require("./util/path");
 
 const app = express();
 
+// setting global configuration values
+// view-engine allows to tell , "hey for any dynamic templates we're trying to render
+// please use this engine we're registering here"
+
+// view allows us to tell express where to find these dynamic templates
+app.set("view engine", "pug");
+app.set("views", "views");
+
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(express.static(path.join(__dirname, "public")));
 
