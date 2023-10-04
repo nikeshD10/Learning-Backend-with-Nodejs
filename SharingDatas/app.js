@@ -13,6 +13,8 @@ const app = express();
 
 // view allows us to tell express where to find these dynamic templates
 app.set("view engine", "pug");
+// if we have setted html template on other folders like templates then we need to mention here
+// like app.set("views", "templates");
 app.set("views", "views");
 
 app.use(bodyParser.urlencoded({ extended: false }));
@@ -22,7 +24,10 @@ app.use("/admin", adminData.routes);
 app.use(shopRoutes);
 
 app.use((req, res, next) => {
-  res.status(404).sendFile(path.join(rootDir, "views", "404.html"));
+  // res.status(404).sendFile(path.join(rootDir, "views", "404.html"));
+  res.status(404).render("404", {
+    pageTitle: "Page Not Found",
+  });
 });
 
 app.listen(3000);
