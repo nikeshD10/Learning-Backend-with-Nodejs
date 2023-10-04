@@ -23,9 +23,6 @@ app.use(bodyParser.urlencoded({ extended: false }));
   else it will pass the request to the next middleware
   if no middleware is left then it will send 404 error
   so we need to add this middleware before the routes
-  Eg: when we access the main.css file from public in some html pages then the request will be passed to the express.static() middleware
-  if the file exists then it will serve the file
-  else it will pass the request to the next middleware
 */
 
 app.use(express.static(path.join(__dirname, "public")));
