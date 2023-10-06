@@ -1,3 +1,5 @@
+// Note: Here products is an array of product objects
+// it is acting as products database
 const products = [];
 
 module.exports = class Product {
