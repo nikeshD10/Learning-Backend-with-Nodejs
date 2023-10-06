@@ -1,0 +1,23 @@
+{
+  "name": "MVC",
+  "version": "1.0.0",
+  "description": "Learning MVC architect",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "nodemon app.js",
+    "start-server": "node app.js"
+  },
+  "author": "Nikesh Dhakal",
+  "license": "ISC",
+  "devDependencies": {
+    "nodemon": "^1.18.3",
+    "prettier": "3.0.3",
+    "prettier-plugin-ejs": "^0.0.18"
+  },
+  "dependencies": {
+    "body-parser": "^1.18.3",
+    "ejs": "^2.6.1",
+    "express": "^4.16.3"
+  }
+}
