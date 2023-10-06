@@ -21,14 +21,18 @@ exports.getProducts = (req, res, next) => {
   // we are calling the fetchAll method on the Product class
   // this method returns the products array
   // we are storing the array in the products variable
-  const products = Product.fetchAll();
-  // we are rendering the shop view
-  res.render("shop", {
-    prods: products,
-    pageTitle: "Shop",
-    path: "/",
-    hasProducts: products.length > 0,
-    activeShop: true,
-    productCSS: true,
+  // const products = Product.fetchAll();
+
+  // why callback? --> check product controller
+  Product.fetchAll((products) => {
+    // we are rendering the shop view
+    res.render("shop", {
+      prods: products,
+      pageTitle: "Shop",
+      path: "/",
+      hasProducts: products.length > 0,
+      activeShop: true,
+      productCSS: true,
+    });
   });
 };

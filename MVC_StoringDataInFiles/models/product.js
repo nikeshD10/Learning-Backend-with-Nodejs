@@ -36,7 +36,7 @@ module.exports = class Product {
 
   // static means we can call this method directly on the class itself
   // and not on an instantiated object
-  static fetchAll() {
+  static fetchAll(cb) {
     const p = path.join(
       path.dirname(require.main.filename),
       "data",
@@ -51,11 +51,21 @@ module.exports = class Product {
     // we are returning an empty array
     fs.readFile(p, (err, fileContent) => {
       if (err) {
-        return [];
+        cb([]);
       }
+      // so why callback?
+      // because we are reading the file asynchronously
+      // and we are returning the products array
+      // before the file is read
+      // so we are passing a callback function
+      // and we are calling the callback function
+      // after the file is read
+      // and error of undefined in shop.ejs file is handled.
+      // since in that file we are checking  products.length > 0 but initially products is undefined
+      // so we are passing an empty array as an argument to the callback function
+
       let prod = JSON.parse(fileContent);
-      console.log(prod);
-      return prod;
+      cb(prod);
     });
   }
 };
