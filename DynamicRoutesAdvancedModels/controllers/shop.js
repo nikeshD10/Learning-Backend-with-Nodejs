@@ -14,9 +14,9 @@ exports.getProduct = (req, res, next) => {
   const prodId = req.params.productId; // productId is the name of the route parameter in url
   Product.findById(prodId, (product) => {
     res.render("shop/product-detail", {
-      product: product,
-      pageTitle: product.title,
-      path: "/products",
+      product: product, // product is a property of the response object
+      pageTitle: product.title, // title is a property of the product object
+      path: "/products", // path is used to set the active class in the header
     });
   });
 };
@@ -36,6 +36,12 @@ exports.getCart = (req, res, next) => {
     path: "/cart",
     pageTitle: "Your Cart",
   });
+};
+
+exports.postCart = (req, res, next) => {
+  const prodId = req.body.productId; // productId is the name of the input field in the form
+  console.log(prodId);
+  res.redirect("/cart");
 };
 
 exports.getOrders = (req, res, next) => {
