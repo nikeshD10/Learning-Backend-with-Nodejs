@@ -55,4 +55,49 @@ module.exports = class Cart {
       });
     });
   }
+
+  static deleteProduct(id, productPrice) {
+    fs.readFile(p, (err, fileContent) => {
+      //if there is an error then we return
+      if (err) {
+        return;
+      }
+      // if there is no error then we continue
+      // we parse the file content
+      const updatedCart = { ...JSON.parse(fileContent) };
+      // we find the product we want to delete
+      const product = updatedCart.products.find((prod) => prod.id === id);
+      // if we don't find the product then we return
+      if (!product) {
+        return;
+      }
+      // if we find the product then we continue
+      // we extract the product quantity
+      const productQty = product.qty;
+      // we update the cart
+      updatedCart.products = updatedCart.products.filter(
+        (prod) => prod.id !== id
+      );
+      // we update the total price
+      updatedCart.totalPrice =
+        updatedCart.totalPrice - productPrice * productQty;
+
+      fs.writeFile(p, JSON.stringify(updatedCart), (err) => {
+        console.log(err);
+      });
+    });
+  }
+
+  static getCart(cb) {
+    fs.readFile(p, (err, fileContent) => {
+      const cart = JSON.parse(fileContent);
+      // if we have an error then we call the callback function with an empty array
+      if (err) {
+        cb([]);
+      } else {
+        // if we don't have an error then we call the callback function with the parsed file content
+        cb(cart);
+      }
+    });
+  }
 };
