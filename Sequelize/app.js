@@ -11,10 +11,8 @@ const adminRoutes = require("./routes/admin");
 const shopRoutes = require("./routes/shop");
 
 // For databse
-/*
-  This db will basically be a connection pool
-*/
-const db = require("./util/database");
+
+const sequelize = require("./util/database");
 
 // create an express app instance
 const app = express();
@@ -29,4 +27,15 @@ app.use("/admin", adminRoutes);
 app.use(shopRoutes);
 app.use(errorController.get404);
 
-app.listen(3000);
+// look at all the models we defined and create tables for them in the database
+// it sync modal to database by creating apporpriate tables for them
+// it doesn't override the existing tables
+sequelize
+  .sync()
+  .then((result) => {
+    // console.log(result);
+    app.listen(3000);
+  })
+  .catch((err) => {
+    // console.log(err);
+  });
