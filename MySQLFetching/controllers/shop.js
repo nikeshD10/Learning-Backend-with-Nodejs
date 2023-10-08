@@ -15,13 +15,15 @@ exports.getProducts = (req, res, next) => {
 
 exports.getProduct = (req, res, next) => {
   const prodId = req.params.productId; // productId is the name of the route parameter in url
-  Product.findById(prodId, (product) => {
-    res.render("shop/product-detail", {
-      product: product, // product is a property of the response object
-      pageTitle: product.title, // title is a property of the product object
-      path: "/products", // path is used to set the active class in the header
-    });
-  });
+  Product.findById(prodId)
+    .then(([row]) => {
+      res.render("shop/product-detail", {
+        product: row[0], // product is a property of the response object
+        pageTitle: row[0].title, // title is a property of the product object
+        path: "/products", // path is used to set the active class in the header
+      });
+    })
+    .catch((err) => console.log(err));
 };
 
 exports.getIndex = (req, res, next) => {
