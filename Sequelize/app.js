@@ -24,6 +24,23 @@ app.set("views", "views");
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(express.static(path.join(__dirname, "public")));
 
+// we are adding a new middleware to store the user in the incoming request
+// we are adding a new property to the request object
+// Note : during npm start only sequelize commmand below runs first. All this middleware are registered only
+//        but not executed. They are executed only when we get a incoming request.
+
+// We are guaranted that we have a user in the database because we are creating a user in the sequelize.sync() method below
+app.use((req, res, next) => {
+  User.findByPk(1)
+    .then((user) => {
+      // we are storing the sequelized user object in the request object not just js object.
+      // it has all the sequelize methods and field values like createProduct, getProducts etc.
+      req.user = user;
+      next();
+    })
+    .catch((err) => console.log(err));
+});
+
 app.use("/admin", adminRoutes);
 app.use(shopRoutes);
 app.use(errorController.get404);
@@ -38,7 +55,16 @@ Product.belongsTo(User, { constraints: true, onDelete: "CASCADE" });
 sequelize
   .sync({ force: true })
   .then((result) => {
-    // console.log(result);
+    return User.findByPk(1);
+  })
+  .then((user) => {
+    if (!user) {
+      return User.create({ name: "Max", email: "test@test.com" });
+    }
+    return user;
+  })
+  .then((user) => {
+    // console.log(user);
     app.listen(3000);
   })
   .catch((err) => {
