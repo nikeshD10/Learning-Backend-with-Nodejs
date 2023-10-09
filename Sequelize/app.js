@@ -10,9 +10,10 @@ const errorController = require("./controllers/error");
 const adminRoutes = require("./routes/admin");
 const shopRoutes = require("./routes/shop");
 
-// For databse
-
+// For database
 const sequelize = require("./util/database");
+const Product = require("./models/product");
+const User = require("./models/user");
 
 // create an express app instance
 const app = express();
@@ -27,15 +28,19 @@ app.use("/admin", adminRoutes);
 app.use(shopRoutes);
 app.use(errorController.get404);
 
+// define relationships between models
+// constraints: true, onDelete: "CASCADE" means that if we delete a user then all the products associated with that user will also be deleted
+Product.belongsTo(User, { constraints: true, onDelete: "CASCADE" });
+
 // look at all the models we defined and create tables for them in the database
 // it sync modal to database by creating apporpriate tables for them
 // it doesn't override the existing tables
 sequelize
-  .sync()
+  .sync({ force: true })
   .then((result) => {
     // console.log(result);
     app.listen(3000);
   })
   .catch((err) => {
-    // console.log(err);
+    console.log(err);
   });
