@@ -2,10 +2,10 @@ const Product = require("../models/product");
 const Cart = require("../models/cart");
 
 exports.getProducts = (req, res, next) => {
-  Product.fetchAll()
-    .then(([rows]) => {
+  Product.findAll()
+    .then((products) => {
       res.render("shop/product-list", {
-        prods: rows,
+        prods: products,
         pageTitle: "All Products",
         path: "/products",
       });
@@ -14,23 +14,32 @@ exports.getProducts = (req, res, next) => {
 };
 
 exports.getProduct = (req, res, next) => {
-  const prodId = req.params.productId; // productId is the name of the route parameter in url
-  Product.findById(prodId)
-    .then(([row]) => {
+  const prodId = req.params.productId;
+  Product.findAll({ where: { id: prodId } })
+    .then((products) => {
       res.render("shop/product-detail", {
-        product: row[0], // product is a property of the response object
-        pageTitle: row[0].title, // title is a property of the product object
-        path: "/products", // path is used to set the active class in the header
+        product: products[0],
+        pageTitle: products[0].title,
+        path: "/products",
       });
     })
     .catch((err) => console.log(err));
+  // Product.findByPk(prodId)
+  //   .then((product) => {
+  //     res.render("shop/product-detail", {
+  //       product: product,
+  //       pageTitle: product.title,
+  //       path: "/products",
+  //     });
+  //   })
+  //   .catch((err) => console.log(err));
 };
 
 exports.getIndex = (req, res, next) => {
-  Product.fetchAll()
-    .then(([rows]) => {
+  Product.findAll()
+    .then((products) => {
       res.render("shop/index", {
-        prods: rows,
+        prods: products,
         pageTitle: "Shop",
         path: "/",
       });
@@ -40,12 +49,12 @@ exports.getIndex = (req, res, next) => {
 
 exports.getCart = (req, res, next) => {
   Cart.getCart((cart) => {
-    Product.fetchAll()
-      .then(([rows]) => {
+    Product.findAll()
+      .then((products) => {
         // we need to create a new array of cart products
         // we need to loop through the products
         const cartProducts = [];
-        for (let product of rows) {
+        for (let product of products) {
           // we need to find the product in the cart
           const cartProductData = cart.products.find(
             (prod) => prod.id === product.id
@@ -71,18 +80,22 @@ exports.getCart = (req, res, next) => {
 
 exports.postCart = (req, res, next) => {
   const prodId = req.body.productId; // productId is the name of the input field in the form
-  Product.findById(prodId, (product) => {
-    Cart.addProduct(prodId, product.price);
-  });
-  res.redirect("/cart");
+  Product.findByPk(prodId)
+    .then((product) => {
+      Cart.addProduct(prodId, product.price);
+      res.redirect("/cart");
+    })
+    .catch((err) => console.log(err));
 };
 
 exports.postCartDeleteProduct = (req, res, next) => {
   const prodId = req.body.productId; // productId is the name of the input field in the form
-  Product.findById(prodId, (product) => {
-    Cart.deleteProduct(prodId, product.price);
-    res.redirect("/cart");
-  });
+  Product.findByPk(prodId)
+    .then((product) => {
+      Cart.deleteProduct(prodId, product.price);
+      res.redirect("/cart");
+    })
+    .catch((err) => console.log(err));
 };
 
 exports.getOrders = (req, res, next) => {
