@@ -59,8 +59,13 @@ exports.getEditProduct = (req, res, next) => {
     return res.redirect("/");
   }
   const prodId = req.params.productId;
-  Product.findByPk(prodId)
-    .then((product) => {
+
+  // we are using the user sequelize method to find the product by id since user is associated with many products
+  req.user
+    .getProducts({ where: { id: prodId } })
+    .then((products) => {
+      // we are getting the first product from the array of products
+      const product = products[0];
       // if we don't have a product then we redirect
       if (!product) {
         return res.redirect("/");
@@ -74,6 +79,24 @@ exports.getEditProduct = (req, res, next) => {
       });
     })
     .catch((err) => console.log(err));
+
+  /*      ---------------------- Alternative ---------------------- */
+
+  // Product.findByPk(prodId)
+  //   .then((product) => {
+  //     // if we don't have a product then we redirect
+  //     if (!product) {
+  //       return res.redirect("/");
+  //     }
+  //     // if we have a product then we render the edit-product page
+  //     res.render("admin/edit-product", {
+  //       pageTitle: "Edit Product",
+  //       path: "/admin/edit-product",
+  //       editing: editMode,
+  //       product: product,
+  //     });
+  //   })
+  //   .catch((err) => console.log(err));
 };
 
 exports.postEditProduct = (req, res, next) => {
@@ -105,7 +128,9 @@ exports.postEditProduct = (req, res, next) => {
 };
 
 exports.getProducts = (req, res, next) => {
-  Product.findAll()
+  // finding products which are associated with the user
+  req.user
+    .getProducts()
     .then((products) => {
       res.render("admin/products", {
         prods: products,
