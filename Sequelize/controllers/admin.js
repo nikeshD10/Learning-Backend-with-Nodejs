@@ -13,12 +13,16 @@ exports.postAddProduct = (req, res, next) => {
   const imageUrl = req.body.imageUrl;
   const price = req.body.price;
   const description = req.body.description;
-  Product.create({
-    title: title,
-    price: price,
-    imageUrl: imageUrl,
-    description: description,
-  })
+  // we have alternative also which sequelize provide for associations. Since user has many products sequalize provides
+  // method to create product under user. It will automatically create the userId field in the product table
+
+  req.user
+    .createProduct({
+      title: title,
+      price: price,
+      imageUrl: imageUrl,
+      description: description,
+    })
     .then((result) => {
       console.log("Created Product");
       res.redirect("/admin/products");
@@ -26,6 +30,22 @@ exports.postAddProduct = (req, res, next) => {
     .catch((err) => {
       console.log(err);
     });
+
+  /*      ---------------------- Alternative ---------------------- */
+  // Product.create({
+  //   title: title,
+  //   price: price,
+  //   imageUrl: imageUrl,
+  //   description: description,
+  //   userId: req.user.id, // we are getting the user from the request object
+  // })
+  //   .then((result) => {
+  //     console.log("Created Product");
+  //     res.redirect("/admin/products");
+  //   })
+  //   .catch((err) => {
+  //     console.log(err);
+  //   });
 };
 
 exports.getEditProduct = (req, res, next) => {

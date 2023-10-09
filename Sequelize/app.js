@@ -48,6 +48,7 @@ app.use(errorController.get404);
 // define relationships between models
 // constraints: true, onDelete: "CASCADE" means that if we delete a user then all the products associated with that user will also be deleted
 Product.belongsTo(User, { constraints: true, onDelete: "CASCADE" });
+User.hasMany(Product);
 
 // look at all the models we defined and create tables for them in the database
 // it sync modal to database by creating apporpriate tables for them
