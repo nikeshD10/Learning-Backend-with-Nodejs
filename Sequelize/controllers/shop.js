@@ -1,5 +1,6 @@
 const Product = require("../models/product");
 const Cart = require("../models/cart");
+const Order = require("../models/order");
 
 exports.getProducts = (req, res, next) => {
   Product.findAll()
@@ -169,16 +170,57 @@ exports.postCartDeleteProduct = (req, res, next) => {
     .catch((err) => console.log(err));
 };
 
-exports.getOrders = (req, res, next) => {
-  res.render("shop/orders", {
-    path: "/orders",
-    pageTitle: "Your Orders",
-  });
+exports.postOrder = (req, res, next) => {
+  // fetch the cart
+  let fetchedCart;
+
+  // fetch the products from the cart and add them to the order
+  req.user
+    .getCart()
+    .then((cart) => {
+      fetchedCart = cart;
+      // magic method
+      return cart.getProducts();
+    })
+    .then((products) => {
+      return req.user
+        .createOrder()
+        .then((order) => {
+          // magic method
+          return order.addProducts(
+            products.map((product) => {
+              // we need to add quantity to the product and it is also a magic method
+              product.orderItem = { quantity: product.cartItem.quantity };
+              return product;
+            })
+          );
+        })
+        .catch((err) => console.log(err));
+    })
+    .then((product) => {
+      return fetchedCart.setProducts(null); // magic method
+    })
+    .then((result) => {
+      res.redirect("/orders");
+    })
+    .catch((err) => console.log(err));
 };
 
-exports.getCheckout = (req, res, next) => {
-  res.render("shop/checkout", {
-    path: "/checkout",
-    pageTitle: "Checkout",
-  });
+exports.getOrders = (req, res, next) => {
+  // so what we are passing inside getOrders is
+  // { include: ["products"] } is a sequelize object
+  // it is saying when you fetch the orders then also fetch the products associated with the order
+
+  req.user
+    .getOrders({
+      // magic method
+      include: ["products"],
+    })
+    .then((orders) => {
+      res.render("shop/orders", {
+        path: "/orders",
+        pageTitle: "Your Orders",
+        orders: orders,
+      });
+    });
 };

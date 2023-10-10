@@ -71,8 +71,8 @@ Product.belongsToMany(Order, { through: OrderItem });
 // it sync modal to database by creating apporpriate tables for them
 // it doesn't override the existing tables
 sequelize
-  .sync({ force: true })
-  // .sync()
+  // .sync({ force: true })
+  .sync()
   .then((result) => {
     return User.findByPk(1);
   })
