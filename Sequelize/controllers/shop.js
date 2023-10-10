@@ -141,9 +141,29 @@ exports.postCart = (req, res, next) => {
 
 exports.postCartDeleteProduct = (req, res, next) => {
   const prodId = req.body.productId; // productId is the name of the input field in the form
-  Product.findByPk(prodId)
-    .then((product) => {
-      Cart.deleteProduct(prodId, product.price);
+
+  /* ------------ Approach 1 ------------ */
+  // Product.findByPk(prodId)
+  //   .then((product) => {
+  //     Cart.deleteProduct(prodId, product.price);
+  //     res.redirect("/cart");
+  //   })
+  //   .catch((err) => console.log(err));
+
+  /* ------------ Approach 2 ------------ */
+  req.user
+    .getCart()
+    .then((cart) => {
+      // magic method
+      return cart.getProducts({ where: { id: prodId } });
+    })
+    .then((products) => {
+      // we need to retrieve the product
+      const product = products[0];
+      // magic method
+      return product.cartItem.destroy();
+    })
+    .then((result) => {
       res.redirect("/cart");
     })
     .catch((err) => console.log(err));

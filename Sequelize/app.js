@@ -16,6 +16,8 @@ const Product = require("./models/product");
 const User = require("./models/user");
 const Cart = require("./models/cart");
 const CartItem = require("./models/cart-item");
+const Order = require("./models/order");
+const OrderItem = require("./models/order-item");
 
 // create an express app instance
 const app = express();
@@ -58,12 +60,19 @@ Cart.belongsTo(User); // association between cart and user (optional)
 Cart.belongsToMany(Product, { through: CartItem }); // association between cart and product through cart-item
 Product.belongsToMany(Cart, { through: CartItem }); // association between product and cart through cart-item
 
+// association between order and user (one to many relationship)
+Order.belongsTo(User);
+User.hasMany(Order);
+// association between order and product (many to many relationship)
+Order.belongsToMany(Product, { through: OrderItem });
+Product.belongsToMany(Order, { through: OrderItem });
+
 // look at all the models we defined and create tables for them in the database
 // it sync modal to database by creating apporpriate tables for them
 // it doesn't override the existing tables
 sequelize
-  // .sync({ force: true })
-  .sync()
+  .sync({ force: true })
+  // .sync()
   .then((result) => {
     return User.findByPk(1);
   })
