@@ -48,41 +48,92 @@ exports.getIndex = (req, res, next) => {
 };
 
 exports.getCart = (req, res, next) => {
-  Cart.getCart((cart) => {
-    Product.findAll()
-      .then((products) => {
-        // we need to create a new array of cart products
-        // we need to loop through the products
-        const cartProducts = [];
-        for (let product of products) {
-          // we need to find the product in the cart
-          const cartProductData = cart.products.find(
-            (prod) => prod.id === product.id
-          );
-          // if we have a product in the cart
-          if (cartProductData) {
-            // we need to push the product to the cartProducts array
-            cartProducts.push({
-              productData: product,
-              qty: cartProductData.qty,
-            });
-          }
-        }
-        res.render("shop/cart", {
-          path: "/cart",
-          pageTitle: "Your Cart",
-          products: cartProducts,
-        });
-      })
-      .catch((err) => console.log(err));
-  });
+  req.user
+    .getCart()
+    .then((cart) => {
+      // we need to create a new array of cart products
+      // we need to loop through the products
+      cart
+        .getProducts()
+        .then((products) => {
+          res.render("shop/cart", {
+            path: "/cart",
+            pageTitle: "Your Cart",
+            products: products,
+          });
+        })
+        .catch((err) => console.log(err));
+    })
+    .catch((err) => console.log(err));
+
+  // Cart.getCart((cart) => {
+  //   Product.findAll()
+  //     .then((products) => {
+  //       // we need to create a new array of cart products
+  //       // we need to loop through the products
+  //       const cartProducts = [];
+  //       for (let product of products) {
+  //         // we need to find the product in the cart
+  //         const cartProductData = cart.products.find(
+  //           (prod) => prod.id === product.id
+  //         );
+  //         // if we have a product in the cart
+  //         if (cartProductData) {
+  //           // we need to push the product to the cartProducts array
+  //           cartProducts.push({
+  //             productData: product,
+  //             qty: cartProductData.qty,
+  //           });
+  //         }
+  //       }
+  //       res.render("shop/cart", {
+  //         path: "/cart",
+  //         pageTitle: "Your Cart",
+  //         products: cartProducts,
+  //       });
+  //     })
+  //     .catch((err) => console.log(err));
+  // });
 };
 
 exports.postCart = (req, res, next) => {
   const prodId = req.body.productId; // productId is the name of the input field in the form
-  Product.findByPk(prodId)
+  // Product.findByPk(prodId)
+  //   .then((product) => {
+  //     Cart.addProduct(prodId, product.price);
+  //     res.redirect("/cart");
+  //   })
+  //   .catch((err) => console.log(err));
+  let fetchedCart;
+  let newQuantity = 1;
+
+  req.user
+    .getCart()
+    .then((cart) => {
+      // retrieving single product which matches the prodId
+      fetchedCart = cart;
+      return cart.getProducts({ where: { id: prodId } });
+    })
+    .then((products) => {
+      let product;
+      if (products.length > 0) {
+        product = products[0];
+      }
+      if (product) {
+        // we need to increase the quantity of the product
+        // This is also a magic method provided by sequelize but valid only for many to many relationship and inbetween tables
+        newQuantity = product.cartItem.quantity + 1;
+        return product;
+      }
+      return Product.findByPk(prodId);
+    })
     .then((product) => {
-      Cart.addProduct(prodId, product.price);
+      // magic method
+      return fetchedCart.addProduct(product, {
+        through: { quantity: newQuantity }, // setting the keys or fields that should be set in the intermediate table
+      });
+    })
+    .then(() => {
       res.redirect("/cart");
     })
     .catch((err) => console.log(err));

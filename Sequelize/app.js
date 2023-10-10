@@ -14,6 +14,8 @@ const shopRoutes = require("./routes/shop");
 const sequelize = require("./util/database");
 const Product = require("./models/product");
 const User = require("./models/user");
+const Cart = require("./models/cart");
+const CartItem = require("./models/cart-item");
 
 // create an express app instance
 const app = express();
@@ -49,12 +51,19 @@ app.use(errorController.get404);
 // constraints: true, onDelete: "CASCADE" means that if we delete a user then all the products associated with that user will also be deleted
 Product.belongsTo(User, { constraints: true, onDelete: "CASCADE" });
 User.hasMany(Product);
+User.hasOne(Cart); // association between user and cart It will add key to which user this cart belongs to
+Cart.belongsTo(User); // association between cart and user (optional)
+// Param through is used to define the intermediate table name
+// Telling sequelize where this connection is stored
+Cart.belongsToMany(Product, { through: CartItem }); // association between cart and product through cart-item
+Product.belongsToMany(Cart, { through: CartItem }); // association between product and cart through cart-item
 
 // look at all the models we defined and create tables for them in the database
 // it sync modal to database by creating apporpriate tables for them
 // it doesn't override the existing tables
 sequelize
-  .sync({ force: true })
+  // .sync({ force: true })
+  .sync()
   .then((result) => {
     return User.findByPk(1);
   })
@@ -65,7 +74,12 @@ sequelize
     return user;
   })
   .then((user) => {
-    // console.log(user);
+    // creating a cart for the user
+    // Note: we are not creating a cart item here
+    return user.createCart();
+  })
+  .then((cart) => {
+    console.log("Cart created");
     app.listen(3000);
   })
   .catch((err) => {
