@@ -1,51 +1,63 @@
-// const { MongoClient } = require("mongodb");
+// const { MongoClient, ServerApiVersion } = require("mongodb");
+// const uri =
+//   "mongodb+srv://ipbcybe2022:M0ngoDBAryan@project0.lyxhh8a.mongodb.net/?retryWrites=true&w=majority";
 
-// let _db;
+// // Create a MongoClient with a MongoClientOptions object to set the Stable API version
+// const client = new MongoClient(uri, {
+//   serverApi: {
+//     version: ServerApiVersion.v1,
+//     strict: true,
+//     deprecationErrors: true,
+//   },
+//   useUnifiedTopology: true,
+// });
+
+// // This function helps us to connect to the mongodb Client but we can't do anything yet
+// // And this is not good way to connect to mongodb cause for every operation we need to connect to mongodb
 // const mongoConnect = (callback) => {
-//   MongoClient.connect(
-//     "mongodb+srv://ipbcybe2022:M0ngoDBAryan@project0.lyxhh8a.mongodb.net/?retryWrites=true&w=majority"
-//   )
+//   client
+//     .connect()
 //     .then((client) => {
-//       console.log("Connected!");
-//       _db = client.db();
-//       callback();
+//       callback(); // when we pass param in callback then it means we are returing the client from here and can be used in other files where we call that callback
 //     })
 //     .catch((err) => {
-//       console.log(err);
 //       throw err;
 //     });
 // };
 
-// const getDb = () => {
-//   if (_db) {
-//     return _db;
+// // It would be better if you could manage the connection in our database and then simply return access to the client which we
+// // set up once from there to the rest of our application that need access to the database
+
+// async function getDb() {
+//   try {
+//     await client.connect();
+//     const database = client.db("admin");
+//     return database;
+//   } catch (error) {
+//     console.error("Error connecting to MongoDB Atlas", error);
+//     throw error;
 //   }
-//   throw "No database found!";
-// };
+// }
 
 // exports.mongoConnect = mongoConnect;
 // exports.getDb = getDb;
 
-const { MongoClient, ServerApiVersion } = require("mongodb");
-const uri =
-  "mongodb+srv://ipbcybe2022:M0ngoDBAryan@project0.lyxhh8a.mongodb.net/?retryWrites=true&w=majority";
+const mongodb = require("mongodb");
+const MongoClient = mongodb.MongoClient;
 
-// Create a MongoClient with a MongoClientOptions object to set the Stable API version
-const client = new MongoClient(uri, {
-  serverApi: {
-    version: ServerApiVersion.v1,
-    strict: true,
-    deprecationErrors: true,
-  },
-  useUnifiedTopology: true,
-});
+let _db;
 
-// This function helps us to connect to the mongodb Client but we can't do anything yet
 const mongoConnect = (callback) => {
-  client
-    .connect()
+  MongoClient.connect(
+    "mongodb+srv://ipbcybe2022:M0ngoDBAryan@project0.lyxhh8a.mongodb.net/shop?retryWrites=true&w=majority",
+    {
+      useUnifiedTopology: true,
+    }
+  )
     .then((client) => {
-      callback(client);
+      console.log("Connected!");
+      _db = client.db();
+      callback();
     })
     .catch((err) => {
       console.log(err);
@@ -53,21 +65,12 @@ const mongoConnect = (callback) => {
     });
 };
 
-// async function run() {
-//   try {
-//     // Connect the client to the server	(optional starting in v4.7)
-//     const newClient = await client.connect();
-//     console.log(newClient);
-//     // Send a ping to confirm a successful connection
-//     await client.db("admin").command({ ping: 1 });
-//     console.log(
-//       "Pinged your deployment. You successfully connected to MongoDB!"
-//     );
-//   } finally {
-//     // Ensures that the client will close when you finish/error
-//     await client.close();
-//   }
-// }
-// run().catch(console.dir);
+const getDb = () => {
+  if (_db) {
+    return _db;
+  }
+  throw "No database found!";
+};
 
 exports.mongoConnect = mongoConnect;
+exports.getDb = getDb;
