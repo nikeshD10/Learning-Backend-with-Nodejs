@@ -49,21 +49,24 @@ class User {
       );
   }
 
-  // addToCart(product) {
-  //   const updatedCart = {
-  //     items: [{ productId: new mongodb.ObjectId(product._id), quantity: 1 }],
-  //   };
-
-  //   // const updatedCart = { items: [{ ...product, quantity: 1 }] };
-
-  //   const db = getDb();
-  //   return db
-  //     .collection("users")
-  //     .updateOne(
-  //       { _id: new mongodb.ObjectId(this._id) },
-  //       { $set: { cart: updatedCart } }
-  //     );
-  // }
+  deleteItemFromCart(productId) {
+    const db = getDb();
+    // get the cart items
+    const updatedCartItems = this.cart.items.filter((item) => {
+      return item.productId.toString() !== productId.toString();
+    });
+    // copy the cart
+    const updatedCart = {
+      items: updatedCartItems,
+    };
+    // update the cart
+    return db
+      .collection("users")
+      .updateOne(
+        { _id: new mongodb.ObjectId(this._id) },
+        { $set: { cart: updatedCart } }
+      );
+  }
 
   getCart() {
     const db = getDb();
@@ -74,7 +77,7 @@ class User {
     // get the products from the product ids
     return db
       .collection("products")
-      .find({ _id: { $in: productIds } })
+      .find({ _id: { $in: productIds } }) // $in is a special operator that checks if the value is in the array
       .toArray()
       .then((products) => {
         // return the products with the quantity
