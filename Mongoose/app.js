@@ -23,6 +23,7 @@ app.use((req, res, next) => {
     .then((user) => {
       // note this user we are getting is full mongoose model not just a javascript object
       // so we can call any mongoose method on it
+      // we store user in request so that we can use it in any other middleware or controller
       req.user = user;
       next();
     })

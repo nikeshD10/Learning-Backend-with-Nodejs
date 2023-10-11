@@ -18,7 +18,7 @@ exports.postAddProduct = (req, res, next) => {
     price: price,
     description: description,
     imageUrl: imageUrl,
-    // userId: req.user,
+    userId: req.user, // store entire user object here and mongoose will automatically pick up the id from the user object
   });
   product
     .save() // save() is a method provided by mongoose not defined by us like before in mongodb scratch to save data to the database
@@ -60,16 +60,6 @@ exports.postEditProduct = (req, res, next) => {
   const updatedImageUrl = req.body.imageUrl;
   const updatedDesc = req.body.description;
 
-  const product = new Product(
-    {
-      title: updatedTitle,
-      price: updatedPrice,
-      description: updatedDesc,
-      imageUrl: updatedImageUrl,
-      _id: prodId,
-    },
-    { useFindAndModify: false }
-  );
   Product.findById(prodId)
     .then((product) => {
       product.title = updatedTitle;

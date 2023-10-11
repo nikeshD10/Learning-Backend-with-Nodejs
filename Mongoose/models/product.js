@@ -30,11 +30,12 @@ const productSchema = new Schema({
     type: String,
     required: true,
   },
-  // userId: {
-  //   type: Schema.Types.ObjectId,
-  //   ref: "User",
-  //   required: true,
-  // },
+  userId: {
+    // we are storing user id here
+    type: Schema.Types.ObjectId,
+    ref: "User", // we are setting up relation between product and user
+    required: true,
+  },
 });
 
 /*
