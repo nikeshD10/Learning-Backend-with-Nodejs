@@ -5,7 +5,7 @@ const bodyParser = require("body-parser");
 const mongoose = require("mongoose");
 
 const errorController = require("./controllers/error");
-// const User = require("./models/user");
+const User = require("./models/user");
 
 const app = express();
 
@@ -19,13 +19,14 @@ app.use(bodyParser.urlencoded({ extended: false }));
 app.use(express.static(path.join(__dirname, "public")));
 
 app.use((req, res, next) => {
-  // User.findById("6525e4e9f5abfb102c7f0592")
-  //   .then((user) => {
-  //     req.user = new User(user.name, user.email, user.cart, user._id);
-  //     next();
-  //   })
-  //   .catch((err) => console.log(err));
-  next();
+  User.findById("65273248fdeb8c6b4882ee70")
+    .then((user) => {
+      // note this user we are getting is full mongoose model not just a javascript object
+      // so we can call any mongoose method on it
+      req.user = user;
+      next();
+    })
+    .catch((err) => console.log(err));
 });
 
 app.use("/admin", adminRoutes);
@@ -39,6 +40,19 @@ mongoose
     { useNewUrlParser: true, useUnifiedTopology: true }
   )
   .then((result) => {
+    User.findOne().then((user) => {
+      if (!user) {
+        const user = new User({
+          name: "Aryan",
+          email: "aryan@test.com",
+          cart: {
+            items: [],
+          },
+        });
+        user.save();
+      }
+    });
+
     app.listen(3000);
   })
   .catch((err) => {
