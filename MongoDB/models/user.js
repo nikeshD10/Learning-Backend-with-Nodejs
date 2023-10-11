@@ -125,7 +125,8 @@ class User {
     const db = getDb();
     return db
       .collection("orders")
-      .find({ "user._id": new mongodb.ObjectId(this._id) })
+      .find({ "user._id": new mongodb.ObjectId(this._id) }) // "user._id" is the key and new mongodb.ObjectId(this._id) is the value
+      // this will find all the orders where the user id is equal to the current user id
       .toArray();
   }
 
