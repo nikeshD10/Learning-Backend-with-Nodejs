@@ -60,6 +60,7 @@ exports.postCart = (req, res, next) => {
   const prodId = req.body.productId;
   Product.findById(prodId)
     .then((product) => {
+      // addToCart is a method we defined in user model
       return req.user.addToCart(product);
     })
     .then((result) => {

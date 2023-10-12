@@ -31,4 +31,33 @@ const userSchema = new Schema({
   },
 });
 
+// adding a method to userSchema
+// This will be called in real instance based on that schema
+userSchema.methods.addToCart = function (product) {
+  const cartProductIndex = this.cart.items.findIndex((cp) => {
+    return cp.productId.toString() === product._id.toString(); // we are converting both to string because one is object id and other is string
+  });
+  let newQuantity = 1;
+  const updatedCartItems = [...this.cart.items];
+
+  if (cartProductIndex >= 0) {
+    // product already exists in the cart
+    newQuantity = this.cart.items[cartProductIndex].quantity + 1;
+    updatedCartItems[cartProductIndex].quantity = newQuantity; // updating the quantity
+  }
+  // product does not exists in the cart
+  else {
+    updatedCartItems.push({
+      productId: product._id,
+      quantity: newQuantity,
+    });
+  }
+  // updating the cart
+  const updatedCart = {
+    items: updatedCartItems,
+  };
+  this.cart = updatedCart;
+  return this.save();
+};
+
 module.exports = mongoose.model("User", userSchema); // mongoose will automatically create collection with name users
