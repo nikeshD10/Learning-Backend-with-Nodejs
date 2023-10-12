@@ -1,4 +1,5 @@
 const Product = require("../models/product");
+const Order = require("../models/order");
 
 exports.getProducts = (req, res, next) => {
   Product.find() // doesn't give a cursor but a special mongoose object which has a then method
@@ -84,9 +85,25 @@ exports.postCartDeleteProduct = (req, res, next) => {
 };
 
 exports.postOrder = (req, res, next) => {
-  let fetchedCart;
-  req.user
-    .addOrder()
+  req.user // here we have fetched the user data from the database
+    .populate("cart.items.productId") // we are populating the cart items with the product id
+    .execPopulate() // this will return a promise
+    .then((user) => {
+      const products = user.cart.items.map((i) => {
+        // return {quantity: i.quantity, product: {...i.productId._doc}} // _doc will give us the actual product data
+        return { quantity: i.quantity, product: i.productId };
+      });
+
+      const order = new Order({
+        user: {
+          name: req.user.name,
+          userId: req.user, // mongoose will automatically pick up the id from the user object
+        },
+        products: products,
+      });
+
+      return order.save();
+    })
     .then((result) => {
       res.redirect("/orders");
     })
