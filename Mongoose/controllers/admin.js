@@ -76,8 +76,21 @@ exports.postEditProduct = (req, res, next) => {
 };
 
 exports.getProducts = (req, res, next) => {
+  // This will fetch all the products but only the user id will be populated with the entire user object
   Product.find()
+    // We can also use method select to select only some fields from the product object and exclude some fields
+    .select("title price imageUrl -_id") // this will select only title, price and imageUrl and exclude id
+    // To fetch some other user data we can use populate() method provided by mongoose
+    // We can pass the field name or path we want to populate i.e userId
+    // For nested path we can do something like userId.name
+    // using this when we fetch products we will get the entire user object stored inside userId key not just the id
+    // We can also pass second argument to populate() method which is optional and it is a string of field names separated by space
+    // and in this string we can define which fields we want to fetch from the user object
+    // So if we only want to fetch name and email we can do something like userId name email
+    // so populate method looks like this populate("userId", "name email")
+    .populate("userId", "name email")
     .then((products) => {
+      console.log(products);
       res.render("admin/products", {
         prods: products,
         pageTitle: "Admin Products",
