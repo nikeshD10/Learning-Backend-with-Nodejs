@@ -60,4 +60,15 @@ userSchema.methods.addToCart = function (product) {
   return this.save();
 };
 
+// removing from cart
+userSchema.methods.removeFromCart = function (productId) {
+  const updatedCartItems = this.cart.items.filter((item) => {
+    return item.productId.toString() !== productId.toString();
+  });
+  this.cart.items = updatedCartItems;
+  return this.save(); // How does save work?
+  // save is a method provided by mongoose
+  // it will save the updated cart to the database
+};
+
 module.exports = mongoose.model("User", userSchema); // mongoose will automatically create collection with name users
