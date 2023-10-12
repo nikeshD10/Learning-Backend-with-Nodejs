@@ -71,4 +71,10 @@ userSchema.methods.removeFromCart = function (productId) {
   // it will save the updated cart to the database
 };
 
+// clearing cart after order
+userSchema.methods.clearCart = function () {
+  this.cart = { items: [] };
+  return this.save();
+};
+
 module.exports = mongoose.model("User", userSchema); // mongoose will automatically create collection with name users
