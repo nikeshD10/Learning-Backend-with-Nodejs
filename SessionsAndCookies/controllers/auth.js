@@ -25,3 +25,11 @@ exports.postLogin = (req, res, next) => {
   req.session.isLoggedIn = true;
   res.redirect("/");
 };
+
+exports.postLogout = (req, res, next) => {
+  // Note: this will delete the session from the database
+  req.session.destroy((err) => {
+    console.log(err);
+    res.redirect("/");
+  });
+};

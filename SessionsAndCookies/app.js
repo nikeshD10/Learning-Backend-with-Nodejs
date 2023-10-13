@@ -4,11 +4,19 @@ const express = require("express");
 const bodyParser = require("body-parser");
 const mongoose = require("mongoose");
 const session = require("express-session");
+const MongoDBStore = require("connect-mongodb-session")(session); // This is a constructor function that we can call to create a new store
 
 const errorController = require("./controllers/error");
 const User = require("./models/user");
 
+const MONGODB_URI =
+  "mongodb+srv://ipbcybe2022:M0ngoDBAryan@project0.lyxhh8a.mongodb.net/shop";
 const app = express();
+// This is a store that will be used to store our sessions in the database
+const store = new MongoDBStore({
+  uri: MONGODB_URI,
+  collection: "sessions", // This is the collection that will be created in the database
+});
 
 app.set("view engine", "ejs");
 app.set("views", "views");
@@ -25,6 +33,7 @@ app.use(
     resave: false, // This means that the session will not be saved on every request that is done to the server but only if something changed in the session object
     saveUninitialized: false, // This ensures that no session gets saved for a request where it doesn't need to be saved
     cookie: { maxAge: 1000 * 60 * 60 * 24 }, // 1 day
+    store: store, // This is the store that will be used to store our sessions in the database
   })
 );
 
@@ -47,10 +56,7 @@ app.use(authRoutes);
 app.use(errorController.get404);
 
 mongoose
-  .connect(
-    "mongodb+srv://ipbcybe2022:M0ngoDBAryan@project0.lyxhh8a.mongodb.net/shop?retryWrites=true&w=majority",
-    { useNewUrlParser: true, useUnifiedTopology: true }
-  )
+  .connect(MONGODB_URI, { useNewUrlParser: true, useUnifiedTopology: true })
   .then((result) => {
     User.findOne().then((user) => {
       if (!user) {
