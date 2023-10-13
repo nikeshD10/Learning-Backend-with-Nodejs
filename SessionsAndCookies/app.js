@@ -3,6 +3,7 @@ const path = require("path");
 const express = require("express");
 const bodyParser = require("body-parser");
 const mongoose = require("mongoose");
+const session = require("express-session");
 
 const errorController = require("./controllers/error");
 const User = require("./models/user");
@@ -18,7 +19,18 @@ const authRoutes = require("./routes/auth");
 
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(express.static(path.join(__dirname, "public")));
+app.use(
+  session({
+    secret: "MySecret",
+    resave: false, // This means that the session will not be saved on every request that is done to the server but only if something changed in the session object
+    saveUninitialized: false, // This ensures that no session gets saved for a request where it doesn't need to be saved
+    cookie: { maxAge: 1000 * 60 * 60 * 24 }, // 1 day
+  })
+);
 
+// Note: this middleware is executed for every incoming request
+// Because this middleware is executed for every incoming request, it's a good place to check if the user is logged in
+// This middleware runs in every incoming requests before our routes handles them
 app.use((req, res, next) => {
   User.findById("5bab316ce0a7c75f783cb8a8")
     .then((user) => {
