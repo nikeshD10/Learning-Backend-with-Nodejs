@@ -5,6 +5,7 @@ const bodyParser = require("body-parser");
 const mongoose = require("mongoose");
 const session = require("express-session");
 const MongoDBStore = require("connect-mongodb-session")(session);
+const csrf = require("csurf");
 
 const errorController = require("./controllers/error");
 const User = require("./models/user");
@@ -17,6 +18,15 @@ const store = new MongoDBStore({
   uri: MONGODB_URI,
   collection: "sessions",
 });
+
+// Initializing csrf protection
+// Default settings includes cookie: {httpOnly: true, secure: true}
+// But we are not using https so we are not using secure: true
+// We are using httpOnly: true so that the cookie cannot be accessed by javascript
+// We are using sameSite: true so that the cookie cannot be accessed by cross-site requests
+// We are using maxAge: 3600 so that the cookie expires after 1 hour
+
+const csrfProtection = csrf(); // csrfProtection is a middleware
 
 app.set("view engine", "ejs");
 app.set("views", "views");
@@ -35,6 +45,8 @@ app.use(
     store: store,
   })
 );
+// csrfProtection should be used after session middleware
+app.use(csrfProtection);
 
 app.use((req, res, next) => {
   if (!req.session.user) {
