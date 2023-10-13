@@ -1,6 +1,11 @@
 const Product = require("../models/product");
 
 exports.getAddProduct = (req, res, next) => {
+  // To protect the routes from unauthenticated users, we can use the following code:
+  // if (!req.session.isLoggedIn) {
+  //   return res.redirect("/login");
+  // }
+
   res.render("admin/edit-product", {
     pageTitle: "Add Product",
     path: "/admin/add-product",
