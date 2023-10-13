@@ -3,6 +3,7 @@ const path = require("path");
 const express = require("express");
 const bodyParser = require("body-parser");
 const mongoose = require("mongoose");
+// session is required when we don't want to lose the data after every response is sent
 const session = require("express-session");
 const MongoDBStore = require("connect-mongodb-session")(session); // This is a constructor function that we can call to create a new store
 
@@ -41,7 +42,11 @@ app.use(
 // Because this middleware is executed for every incoming request, it's a good place to check if the user is logged in
 // This middleware runs in every incoming requests before our routes handles them
 app.use((req, res, next) => {
-  User.findById("5bab316ce0a7c75f783cb8a8")
+  if (!req.session.user) {
+    return next();
+  }
+
+  User.findById(req.session.user._id)
     .then((user) => {
       req.user = user;
       next();
