@@ -18,13 +18,34 @@ exports.getSignup = (req, res, next) => {
 };
 
 exports.postLogin = (req, res, next) => {
-  User.findById("5bab316ce0a7c75f783cb8a8")
+  const email = req.body.email;
+  const password = req.body.password;
+  // Now try to find the user with the email
+  User.findOne({ email: email })
     .then((user) => {
-      req.session.isLoggedIn = true;
-      req.session.user = user;
-      req.session.save((err) => {
-        console.log(err);
-        res.redirect("/");
+      if (!user) {
+        // if user is not found then redirect to login page
+        return res.redirect("/login");
+      }
+      // validate the password
+      // compare() method takes the password that we want to compare with the hashed password
+      // compare() method returns a promise
+      // if the validation fails then redirect to login page
+      // if the validation is successful then redirect to home page
+      bcrypt.compare(password, user.password).then((doMatch) => {
+        if (doMatch) {
+          req.session.isLoggedIn = true;
+          req.session.user = user;
+          // save() method is used to save the session in the database
+          // save() method returns a promise
+          // if the session is saved successfully then redirect to home page
+          // if the session is not saved then redirect to login page
+          return req.session.save((err) => {
+            console.log(err);
+            res.redirect("/");
+          });
+        }
+        res.redirect("/login");
       });
     })
     .catch((err) => console.log(err));
