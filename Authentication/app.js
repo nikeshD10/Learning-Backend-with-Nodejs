@@ -6,6 +6,7 @@ const mongoose = require("mongoose");
 const session = require("express-session");
 const MongoDBStore = require("connect-mongodb-session")(session);
 const csrf = require("csurf");
+const flash = require("connect-flash"); // For showing flash messages
 
 const errorController = require("./controllers/error");
 const User = require("./models/user");
@@ -27,6 +28,9 @@ const store = new MongoDBStore({
 // We are using maxAge: 3600 so that the cookie expires after 1 hour
 
 const csrfProtection = csrf(); // csrfProtection is a middleware
+
+// For registering flash middleware
+app.use(flash());
 
 app.set("view engine", "ejs");
 app.set("views", "views");
@@ -58,6 +62,14 @@ app.use((req, res, next) => {
       next();
     })
     .catch((err) => console.log(err));
+});
+
+// For every request executed this two fields will be added to the response object
+// This middleware will run for every request
+app.use((req, res, next) => {
+  res.locals.isAuthenticated = req.session.isLoggedIn;
+  res.locals.csrfToken = req.csrfToken();
+  next();
 });
 
 app.use("/admin", adminRoutes);
