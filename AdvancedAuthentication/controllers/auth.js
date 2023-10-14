@@ -2,6 +2,10 @@ const bcrypt = require("bcryptjs");
 const nodemailer = require("nodemailer");
 const sendgridTransport = require("nodemailer-sendgrid-transport");
 
+// This crypto library is built into Node.js, so we don't need to install it with npm.
+// This library allows us to generate random tokens.
+const crypto = require("crypto");
+
 const User = require("../models/user");
 
 const transporter = nodemailer.createTransport(
@@ -131,5 +135,47 @@ exports.getReset = (req, res, next) => {
     path: "/reset",
     pageTitle: "Reset Password",
     errorMessage: message,
+  });
+};
+
+exports.postReset = (req, res, next) => {
+  crypto.randomBytes(32, (err, buffer) => {
+    // buffer is a random sequence of bytes
+    if (err) {
+      console.log(err);
+      return res.redirect("/reset");
+    }
+    // convert buffer to string
+    const token = buffer.toString("hex");
+    // find user with email
+    User.findOne({ email: req.body.email })
+      .then((user) => {
+        // if no user with that email exists
+        if (!user) {
+          req.flash("error", "No account with that email found.");
+          return res.redirect("/reset");
+        }
+        // if user with that email exists
+        user.resetToken = token;
+        // 3600000 ms = 1 hour
+        user.resetTokenExpiration = Date.now() + 3600000;
+        return user.save();
+      })
+      .then((result) => {
+        // send email
+        res.redirect("/");
+        transporter.sendMail({
+          to: req.body.email,
+          from: "joinmytube0@gmail.com",
+          subject: "Password reset",
+          html: `
+            <p>You requested a password reset.</p>
+            <p>Click this <a href="http://localhost:3000/reset/${token}">link</a> to set a new password.</p>
+          `,
+        });
+      })
+      .catch((err) => {
+        console.log(err);
+      });
   });
 };
