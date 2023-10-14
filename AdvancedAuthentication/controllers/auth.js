@@ -1,7 +1,6 @@
 const bcrypt = require("bcryptjs");
 const nodemailer = require("nodemailer");
 const sendgridTransport = require("nodemailer-sendgrid-transport");
-require("dotenv").config();
 
 // This crypto library is built into Node.js, so we don't need to install it with npm.
 // This library allows us to generate random tokens.
@@ -190,10 +189,10 @@ exports.getNewPassword = (req, res, next) => {
   })
     .then((user) => {
       // if no user with that token exists
-      if (!user) {
-        req.flash("error", "Token expired.");
-        return res.redirect("/reset");
-      }
+      // if (!user) {
+      //   req.flash("error", "Token expired.");
+      //   return res.redirect("/reset");
+      // }
       // if user with that token exists
       let message = req.flash("error");
       if (message.length > 0) {
@@ -209,6 +208,47 @@ exports.getNewPassword = (req, res, next) => {
         userId: user._id.toString(),
         passwordToken: token,
       });
+    })
+    .catch((err) => {
+      console.log(err);
+    });
+};
+
+exports.postNewPassword = (req, res, next) => {
+  // get new password from form
+  const newPassword = req.body.password;
+  // get userId and token from form
+  const userId = req.body.userId;
+  const passwordToken = req.body.passwordToken;
+  // find user with userId, token, and token expiration date
+  let resetUser;
+  User.findOne({
+    resetToken: passwordToken,
+    resetTokenExpiration: { $gt: Date.now() },
+    _id: userId,
+  })
+    .then((user) => {
+      // if no user with that token exists
+      if (!user) {
+        req.flash("error", "Token expired.");
+        return res.redirect("/reset");
+      }
+      // if user with that token exists
+      resetUser = user;
+      // hash new password
+      return bcrypt.hash(newPassword, 12);
+    })
+    .then((hashedPassword) => {
+      // set new password and reset token
+      resetUser.password = hashedPassword;
+      resetUser.resetToken = undefined;
+      resetUser.resetTokenExpiration = undefined;
+      // save user
+      return resetUser.save();
+    })
+    .then((result) => {
+      // redirect to login page
+      res.redirect("/login");
     })
     .catch((err) => {
       console.log(err);
