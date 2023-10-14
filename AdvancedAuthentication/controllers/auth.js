@@ -1,6 +1,7 @@
 const bcrypt = require("bcryptjs");
 const nodemailer = require("nodemailer");
 const sendgridTransport = require("nodemailer-sendgrid-transport");
+require("dotenv").config();
 
 // This crypto library is built into Node.js, so we don't need to install it with npm.
 // This library allows us to generate random tokens.
@@ -11,8 +12,7 @@ const User = require("../models/user");
 const transporter = nodemailer.createTransport(
   sendgridTransport({
     auth: {
-      api_key:
-        "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",
+      api_key: process.env.SEND_GRID_API_KEY,
     },
   })
 );
@@ -178,4 +178,39 @@ exports.postReset = (req, res, next) => {
         console.log(err);
       });
   });
+};
+
+exports.getNewPassword = (req, res, next) => {
+  // get token from url
+  const token = req.params.token;
+  // find user with token and token expiration date
+  User.findOne({
+    resetToken: token,
+    resetTokenExpiration: { $gt: Date.now() },
+  })
+    .then((user) => {
+      // if no user with that token exists
+      if (!user) {
+        req.flash("error", "Token expired.");
+        return res.redirect("/reset");
+      }
+      // if user with that token exists
+      let message = req.flash("error");
+      if (message.length > 0) {
+        message = message[0];
+      } else {
+        message = null;
+      }
+      // render new password page
+      res.render("auth/new-password", {
+        path: "/new-password",
+        pageTitle: "New Password",
+        errorMessage: message,
+        userId: user._id.toString(),
+        passwordToken: token,
+      });
+    })
+    .catch((err) => {
+      console.log(err);
+    });
 };
