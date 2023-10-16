@@ -2,6 +2,7 @@ const Product = require("../models/product");
 const Order = require("../models/order");
 const fs = require("fs");
 const path = require("path");
+const PDFDocument = require("pdfkit");
 
 exports.getProducts = (req, res, next) => {
   Product.find()
@@ -165,6 +166,51 @@ exports.getInvoice = (req, res, next) => {
       // three params are : first data folder then invoices folder then invoice file name
       const invoicePath = path.join("data", "invoices", invoiceName);
 
+      // This is creating a pdf file
+      const pdfDoc = new PDFDocument();
+
+      res.setHeader("Content-Type", "application/pdf");
+      res.setHeader("Content-Disposition", "inline; filename=" + invoiceName);
+      // This is actually a readable stream.
+      // so we can pipe it to a writable stream.
+      // We are creating a writable stream here.
+      // calling fs.createWriteStream() ensures pdf genereated is also stored in server not just served to client
+      pdfDoc.pipe(fs.createWriteStream(invoicePath)); // This is writing the data to the file.
+
+      // want to return to client
+      pdfDoc.pipe(res);
+
+      // Now whatever I add to doc will be forwared to fs.createWriteStream() and then to the file.
+      pdfDoc.fontSize(26).text("Invoice", {
+        // text allows us to add single line of text to the pdf
+        underline: true,
+      });
+
+      pdfDoc.text("-----------------------");
+      let totalPrice = 0;
+      // We are looping through the products and adding them to the pdf.
+      order.products.forEach((prod) => {
+        // We are calculating the total price of the order.
+        totalPrice += prod.quantity * prod.product.price;
+        pdfDoc
+          .fontSize(14)
+          .text(
+            prod.product.title +
+              " - " +
+              prod.quantity +
+              " x " +
+              "$" +
+              prod.product.price
+          );
+      });
+
+      pdfDoc.text("---");
+      pdfDoc.fontSize(20).text("Total Price: $" + totalPrice);
+
+      pdfDoc.end();
+
+      // ------------------------- Learning 1 ways of preloading data--------------------------
+      // This is preloading the data into the memory and then sending it to the client.
       // fs.readFile(invoicePath, (err, data) => {
       //   if (err) {
       //     return next(err);
@@ -185,15 +231,15 @@ exports.getInvoice = (req, res, next) => {
 
       // res.send(data);
       // });
-
+      // -------------------------Learning 2 ways of streaming data--------------------------
       // This is streaming data
       // Using this node never has to preload the data into the memory.
       // But just streams it to the client on fly.
       // Only chunk node has to work with is chunk of data that is currently being read in the buffer
-      const file = fs.createReadStream(invoicePath);
-      res.setHeader("Content-Type", "application/pdf");
-      res.setHeader("Content-Disposition", "inline; filename=" + invoiceName);
-      file.pipe(res); // To forward the data that is read in read stream to the response write stream.
+      // const file = fs.createReadStream(invoicePath);
+      // res.setHeader("Content-Type", "application/pdf");
+      // res.setHeader("Content-Disposition", "inline; filename=" + invoiceName);
+      // file.pipe(res); // To forward the data that is read in read stream to the response write stream.
     })
     .catch((err) => next(err));
 };
