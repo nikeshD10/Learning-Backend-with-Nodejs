@@ -165,26 +165,35 @@ exports.getInvoice = (req, res, next) => {
       // three params are : first data folder then invoices folder then invoice file name
       const invoicePath = path.join("data", "invoices", invoiceName);
 
-      fs.readFile(invoicePath, (err, data) => {
-        if (err) {
-          return next(err);
-        }
-        // We are setting headers to tell the browser what kind of file we are sending.
-        res.setHeader("Content-Type", "application/pdf");
-        // inline will open the pdf in the browser
-        res.setHeader(
-          "Content-Disposition",
-          "inline; filename='" + invoiceName + "'"
-        );
+      // fs.readFile(invoicePath, (err, data) => {
+      //   if (err) {
+      //     return next(err);
+      //   }
+      // We are setting headers to tell the browser what kind of file we are sending.
+      // res.setHeader("Content-Type", "application/pdf");
+      // inline will open the pdf in the browser
+      // res.setHeader(
+      //   "Content-Disposition",
+      //   "inline; filename='" + invoiceName + "'"
+      // );
 
-        // attachment will download the pdf
-        // res.setHeader(
-        //   "Content-Disposition",
-        //   "attachement; filename=" + invoiceName
-        // );
+      // attachment will download the pdf
+      // res.setHeader(
+      //   "Content-Disposition",
+      //   "attachement; filename=" + invoiceName
+      // );
 
-        res.send(data);
-      });
+      // res.send(data);
+      // });
+
+      // This is streaming data
+      // Using this node never has to preload the data into the memory.
+      // But just streams it to the client on fly.
+      // Only chunk node has to work with is chunk of data that is currently being read in the buffer
+      const file = fs.createReadStream(invoicePath);
+      res.setHeader("Content-Type", "application/pdf");
+      res.setHeader("Content-Disposition", "inline; filename=" + invoiceName);
+      file.pipe(res); // To forward the data that is read in read stream to the response write stream.
     })
     .catch((err) => next(err));
 };
