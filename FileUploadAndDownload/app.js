@@ -113,7 +113,10 @@ app.use(
 ); // single takes the name of the field where we're expecting the file.
 
 app.use(express.static(path.join(__dirname, "public")));
-// app.use("/images", express.static(path.join(dirname, "images")));
+// Here we are statically serving a folder called images.
+// This will allow us to serve images statically.
+// /images is the path where we can access the images folder.
+app.use("/images", express.static(path.join(__dirname, "images")));
 
 app.use(
   session({
