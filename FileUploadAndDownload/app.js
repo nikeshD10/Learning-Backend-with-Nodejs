@@ -45,6 +45,16 @@ filename: (req, file, cb) => {
 Just like this your error will be solved.
 
 --------------------------------------  Solved    --------------------------------------
+
+
+
+----------------------------------  Note Invoice Download:  ----------------------------------
+ To be able to download the invoice we want to handles this privately.
+ We need to setup our own route for working with invoices because
+ that will allow us to check for things like is the user authenticated and is the user allowed to download this invoice.
+ and so on.
+
+--------------------------------------  End    --------------------------------------
 */
 
 // Hre we're telling multer where to store the incoming files.
