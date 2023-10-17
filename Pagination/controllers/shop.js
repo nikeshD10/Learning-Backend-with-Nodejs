@@ -9,13 +9,39 @@ const Order = require("../models/order");
 const ITEMS_PER_PAGE = 3;
 
 exports.getProducts = (req, res, next) => {
+  const page = +req.query.page || 1; // + converts string to number (if it's a number)
+  let totalItems;
   Product.find()
+    .countDocuments()
+    .then((numProducts) => {
+      totalItems = numProducts;
+      // -------------------------- Pagination --------------------------------
+      return (
+        Product.find()
+          .skip((page - 1) * ITEMS_PER_PAGE) // skip the first n items  (n = (page - 1) * ITEMS_PER_PAGE)
+          // i just don't want to skip items only but I want to limit the number of items being fetched also
+          // so I use the limit method
+          .limit(ITEMS_PER_PAGE)
+      ); // limit the number of items to be fetched
+    })
     .then((products) => {
-      console.log(products);
       res.render("shop/product-list", {
         prods: products,
         pageTitle: "All Products",
         path: "/products",
+        // -------------------------- Pagination solution 1 --------------------------------
+        currentPage: page,
+        hasNextPage: ITEMS_PER_PAGE * page < totalItems, // if the last item is less than the total items then there is a next page
+        hasPreviousPage: page > 1, // if the current page is greater than 1 then there is a previous page
+        nextPage: page + 1,
+        previousPage: page - 1,
+        lastPage: Math.ceil(totalItems / ITEMS_PER_PAGE), // ceil rounds up the number
+
+        // -------------------------- Pagination solution 2 --------------------------------
+
+        /* Note : ----------------- We cannot write comment in ejs file
+                   ---------------- If we comment some values then we cannot comment those values on the controllers side -------------- */
+        pages: Math.ceil(totalItems / ITEMS_PER_PAGE),
       });
     })
     .catch((err) => {
@@ -23,6 +49,20 @@ exports.getProducts = (req, res, next) => {
       error.httpStatusCode = 500;
       return next(error);
     });
+  // Product.find()
+  //   .then((products) => {
+  //     console.log(products);
+  //     res.render("shop/product-list", {
+  //       prods: products,
+  //       pageTitle: "All Products",
+  //       path: "/products",
+  //     });
+  //   })
+  //   .catch((err) => {
+  //     const error = new Error(err);
+  //     error.httpStatusCode = 500;
+  //     return next(error);
+  //   });
 };
 
 exports.getProduct = (req, res, next) => {
@@ -80,10 +120,9 @@ exports.getIndex = (req, res, next) => {
       });
     })
     .catch((err) => {
-      // const error = new Error(err);
-      // error.httpStatusCode = 500;
-      // return next(error);
-      console.log(err);
+      const error = new Error(err);
+      error.httpStatusCode = 500;
+      return next(error);
     });
 
   // Product.find()
