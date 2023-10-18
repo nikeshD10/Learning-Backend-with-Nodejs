@@ -10,4 +10,7 @@ const feedController = require("../controllers/feed");
 // 11. To be able to reach the route we need to register our route in the app.js file
 router.get("/posts", feedController.getPosts);
 
+// 25. create a route for POST request to /feed/post
+router.post("/post", feedController.createPost);
+
 module.exports = router;
