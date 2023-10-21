@@ -3,14 +3,40 @@ const bodyParser = require("body-parser");
 const mongoose = require("mongoose");
 require("dotenv").config();
 const path = require("path");
+const multer = require("multer");
+const { v4: uuidv4 } = require("uuid");
 
 const feedRoutes = require("./routes/feed");
 
 const app = express();
 
+// Multer configuration
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    // cb is callback
+    cb(null, "images"); // null is for error
+  },
+  filename: (req, file, cb) => {
+    cb(null, uuidv4()); // null is for error
+  },
+});
+
+const fileFilter = (req, file, cb) => {
+  if (
+    // If the file is an image, then store it
+    file.mimetype === "image/png" ||
+    file.mimetype === "image/jpg" ||
+    file.mimetype === "image/jpeg"
+  )
+    cb(null, true); // null is for error
+  else cb(null, false);
+};
+
 // app.use(bodyParser.urlencoded()); // x-www-form-urlencoded <form>
 app.use(bodyParser.json()); // application/json
 
+// Multer middleware
+app.use(multer({ storage: storage, fileFilter: fileFilter }).single("image")); // single() means we are expecting a single file stored in that image field
 /*
 here we can use path join to construct an absolute path to that images folder.
 By using the special dirname variable which is available globally in nodejs 

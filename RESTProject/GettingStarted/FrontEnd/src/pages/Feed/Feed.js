@@ -105,6 +105,14 @@ class Feed extends Component {
     this.setState({
       editLoading: true,
     });
+
+    // Browser side provide FormData API which allows us to combine text and blob data
+    // and then send that in a post request
+    const formData = new FormData();
+    formData.append("title", postData.title);
+    formData.append("content", postData.content);
+    formData.append("image", postData.image); // image is the name of the field we are looking for in the backend
+
     // Set up data (with image!)
     let url = "http://localhost:8080/feed/post";
     let method = "POST";
@@ -114,13 +122,20 @@ class Feed extends Component {
 
     fetch(url, {
       method: method,
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        title: postData.title,
-        content: postData.content,
-      }),
+      // headers: {
+      // "Content-Type": "application/json",
+      // we won't use json any more because we are sending a file
+      // JSON data is only text and we can't send files as text
+      // So we need to send a multipart form data request
+      // So we need to use FormData API
+      // which automatically sets the correct headers for us
+      // },
+      // we also don't need json body any more
+      // body: JSON.stringify({
+      //   title: postData.title,
+      //   content: postData.content,
+      // }),
+      body: formData,
     })
       .then((res) => {
         if (res.status !== 200 && res.status !== 201) {

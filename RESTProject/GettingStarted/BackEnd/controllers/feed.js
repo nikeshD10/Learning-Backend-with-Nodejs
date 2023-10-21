@@ -49,14 +49,22 @@ exports.createPost = (req, res, next) => {
     //   errors: errors.array(),
     // });
   }
+
+  if (!req.file) {
+    const error = new Error("No image provided.");
+    error.statusCode = 422;
+    throw error; // This will be caught in the next catch block
+  }
+
   const title = req.body.title;
   const content = req.body.content;
+  const imageUrl = req.file.path.replace("\\", "/"); // This is the path to the image
 
   // Create post in db
   const post = new Post({
     title: title,
     content: content,
-    imageUrl: "../images/Black Panther.jpg",
+    imageUrl: imageUrl,
     creator: { name: "Aryan" },
   });
 
