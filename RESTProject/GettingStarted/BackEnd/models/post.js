@@ -11,4 +11,5 @@ const postSchema = new Schema(
   { timestamps: true } // This will add createdAt and updatedAt fields to the schema
 );
 
+// Note: the first argument is the singular name of the collection that will be created for your model (Mongoose will create the collection for your model when you first save a document to the collection)
 module.exports = mongoose.model("Post", postSchema);
