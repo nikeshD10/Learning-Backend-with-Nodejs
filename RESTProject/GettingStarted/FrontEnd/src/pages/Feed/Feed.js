@@ -59,7 +59,13 @@ class Feed extends Component {
       })
       .then((resData) => {
         this.setState({
-          posts: resData.posts,
+          posts: resData.posts.map((post) => {
+            // We are adding imagePath here because we are using it in Post.js
+            return {
+              ...post,
+              imagePath: post.imageUrl,
+            };
+          }),
           totalPosts: resData.totalItems,
           postsLoading: false,
         });
@@ -117,7 +123,8 @@ class Feed extends Component {
     let url = "http://localhost:8080/feed/post";
     let method = "POST";
     if (this.state.editPost) {
-      url = "URL";
+      method = "PUT";
+      url = "http://localhost:8080/feed/post/" + this.state.editPost._id;
     }
 
     fetch(url, {
