@@ -30,4 +30,7 @@ router.put(
   feedController.updatePost
 );
 
+// to delete the post
+router.delete("/post/:postId", feedController.deletePost); // :postId is a dynamic segment
+
 module.exports = router;

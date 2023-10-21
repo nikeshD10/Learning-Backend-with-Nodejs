@@ -176,6 +176,33 @@ exports.updatePost = (req, res, next) => {
     });
 };
 
+exports.deletePost = (req, res, next) => {
+  const postId = req.params.postId;
+  Post.findById(postId) // findById is a mongoose method
+    .then((post) => {
+      if (!post) {
+        // 404 is a good status code for a resource not found
+        const error = new Error("Could not find post.");
+        error.statusCode = 404;
+        throw error; // This will be caught in the next catch block
+      }
+      // Check logged in user
+      clearImage(post.imageUrl); // This is a function defined below
+      return Post.findByIdAndRemove(postId); // findByIdAndRemove is a mongoose method
+    })
+    .then((result) => {
+      console.log(result);
+      res.status(200).json({ message: "Deleted post." });
+    })
+    .catch((err) => {
+      if (!err.statusCode) {
+        // 500 is a good status code for a server error
+        err.statusCode = 500;
+      }
+      next(err); // This will be caught in the next catch block
+    });
+};
+
 const clearImage = (filePath) => {
   // __dirname to get current path .. will go to up one folder and we look for whatever filepath we get
   filePath = path.join(__dirname, "..", filePath); // This will construct an absolute path to that images folder
