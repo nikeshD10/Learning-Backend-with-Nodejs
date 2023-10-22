@@ -24,6 +24,7 @@ router.get("/posts", isAuth, feedController.getPosts);
 // POST /feed/post
 router.post(
   "/post",
+  isAuth,
   [
     // Note: it is best practice to have similar validation on the frontend and backend
     body("title").trim().isLength({ min: 5 }),
@@ -32,10 +33,11 @@ router.post(
   feedController.createPost
 );
 
-router.get("/post/:postId", feedController.getPost);
+router.get("/post/:postId", isAuth, feedController.getPost);
 
 router.put(
   "/post/:postId",
+  isAuth,
   [
     // Note: it is best practice to have similar validation on the frontend and backend
     body("title").trim().isLength({ min: 5 }),
@@ -45,6 +47,6 @@ router.put(
 );
 
 // to delete the post
-router.delete("/post/:postId", feedController.deletePost); // :postId is a dynamic segment
+router.delete("/post/:postId", isAuth, feedController.deletePost); // :postId is a dynamic segment
 
 module.exports = router;
