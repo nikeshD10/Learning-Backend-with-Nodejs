@@ -2,6 +2,7 @@ const { validationResult } = require("express-validator");
 const fs = require("fs");
 const path = require("path");
 const Post = require("../models/post");
+const User = require("../models/user");
 
 exports.getPosts = (req, res, next) => {
   // We are using req.query.page because we are using query parameters in the route
@@ -69,28 +70,48 @@ exports.createPost = (req, res, next) => {
     throw error; // This will be caught in the next catch block
   }
 
+  let creator;
   const title = req.body.title;
   const content = req.body.content;
   const imageUrl = req.file.path.replace("\\", "/"); // This is the path to the image
 
+  // Before creating the post I need to get user id
   // Create post in db
   const post = new Post({
     title: title,
     content: content,
     imageUrl: imageUrl,
-    creator: { name: "Aryan" },
+    creator: req.userId,
   });
 
   // to save the post to the database
   post
     .save()
+    .then((result) => {
+      // result is the post that was saved to the database
+      return User.findById(req.userId); // findById is a mongoose method
+    })
+    .then((user) => {
+      // user is the user that was found in the database
+      if (!user) {
+        // 404 is a good status code for a resource not found
+        const error = new Error("Could not find user.");
+        error.statusCode = 404;
+        throw error; // This will be caught in the next catch block
+      }
+      creator = user;
+      // Add the post to the user's posts array
+      user.posts.push(post);
+      // Save the user to the database
+      return user.save();
+    })
     .then(
       (result) => {
-        console.log(result);
         res.status(201).json({
           // 201 is a good status code for a successful creation of a resource
           message: "Post created successfully!",
-          post: result,
+          post: post,
+          creator: { _id: creator._id, name: creator.name }, // This is the creator object we are looking for in the frontend
         });
       } // if there is an error
     )
