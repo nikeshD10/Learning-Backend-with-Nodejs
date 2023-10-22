@@ -4,11 +4,24 @@ const path = require("path");
 const Post = require("../models/post");
 
 exports.getPosts = (req, res, next) => {
+  // We are using req.query.page because we are using query parameters in the route
+  const currentPage = req.query.page || 1; // If there is no page query parameter then we will use 1 as the default page
+  const perPage = 2; // We will show 2 posts per page
+  let totalItems; // We will store the total number of posts here
+
   Post.find()
+    .countDocuments() // This will count the total number of documents in the collection
+    .then((count) => {
+      totalItems = count;
+      return Post.find() // This will find all the posts
+        .skip((currentPage - 1) * perPage) // This will skip the posts that are on the previous page
+        .limit(perPage); // This will limit the number of posts to 2
+    })
     .then((posts) => {
       res.status(200).json({
         message: "Fetched posts successfully.",
         posts: posts,
+        totalItems: totalItems,
       });
     })
     .catch((err) => {
