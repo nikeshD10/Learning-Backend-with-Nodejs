@@ -240,7 +240,15 @@ exports.deletePost = (req, res, next) => {
       return Post.findByIdAndRemove(postId); // findByIdAndRemove is a mongoose method
     })
     .then((result) => {
-      console.log(result);
+      return User.findById(req.userId); // findById is a mongoose method
+    })
+    .then((user) => {
+      // Remove the post from the user's posts array
+      user.posts.pull(postId); // pull is a mongoose method to remove an item from an array
+      // Save the user to the database
+      return user.save();
+    })
+    .then((result) => {
       res.status(200).json({ message: "Deleted post." });
     })
     .catch((err) => {
