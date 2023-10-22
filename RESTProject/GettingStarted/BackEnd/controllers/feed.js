@@ -189,6 +189,14 @@ exports.updatePost = (req, res, next) => {
         error.statusCode = 404;
         throw error; // This will be caught in the next catch block
       }
+      // Check if logged in user is the creator of the post
+      if (post.creator.toString() !== req.userId) {
+        // post.creator is an object id so we need to convert it to a string
+        const error = new Error("Not authorized!");
+        error.statusCode = 403; // 403 is a good status code for a forbidden access
+        throw error; // This will be caught in the next catch block
+      }
+
       if (imageUrl !== post.imageUrl) {
         // check if the image url i.e path to image is not the same as the one stored in the old post stored in database
         clearImage(post.imageUrl); // This is a function defined below
@@ -220,7 +228,14 @@ exports.deletePost = (req, res, next) => {
         error.statusCode = 404;
         throw error; // This will be caught in the next catch block
       }
-      // Check logged in user
+
+      // Check logged in user is the creator of the post
+      if (post.creator.toString() !== req.userId) {
+        // post.creator is an object id so we need to convert it to a string
+        const error = new Error("Not authorized!");
+        error.statusCode = 403; // 403 is a good status code for a forbidden access
+        throw error; // This will be caught in the next catch block
+      }
       clearImage(post.imageUrl); // This is a function defined below
       return Post.findByIdAndRemove(postId); // findByIdAndRemove is a mongoose method
     })
