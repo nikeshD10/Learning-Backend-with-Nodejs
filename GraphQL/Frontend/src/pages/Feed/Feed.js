@@ -62,6 +62,7 @@ class Feed extends Component {
               _id
               title
               content
+              imageUrl
               creator  {
                 name
               }
@@ -150,39 +151,82 @@ class Feed extends Component {
       editLoading: true,
     });
     const formData = new FormData();
-    formData.append("title", postData.title);
-    formData.append("content", postData.content);
     formData.append("image", postData.image);
 
-    const graphqlQuery = {
-      query: `
-          mutation CreatePost($title: String!, $content: String!) {
-            createPost(postInput: {title: $title, content: $content, imageUrl: "someurl"}) {
-              _id
-              title
-              content
-              imageUrl
-              creator {
-                name
-              }
-              createdAt
-            }
-          }
-      `,
-      variables: {
-        title: postData.title,
-        content: postData.content,
-      },
-    };
+    // check if we are in edit mode and if so, append the old path
+    if (this.state.editPost) {
+      formData.append("oldPath", this.state.editPost.imagePath);
+    }
 
-    fetch("http://localhost:8080/graphql", {
-      method: "POST",
-      body: JSON.stringify(graphqlQuery),
+    // before sending graphql query  I will send another query to get the url of the image
+
+    fetch("http://localhost:8080/post-image", {
+      method: "PUT",
       headers: {
         Authorization: "Bearer " + this.props.token,
-        "Content-Type": "application/json",
       },
+      body: formData,
     })
+      .then((res) => {
+        return res.json();
+      })
+      .then((fileResData) => {
+        // extracting the url from the response
+        const imageUrl = fileResData.filePath;
+        console.log(fileResData);
+        // now we will send the graphql query
+        const graphqlQuery = {
+          query: `
+            mutation CreatePost($title: String!, $content: String!, $imageUrl: String!) {
+              createPost(postInput: {title: $title, content: $content, imageUrl: $imageUrl}) {
+                _id
+                title
+                content
+                imageUrl
+                creator {
+                  name
+                }
+                createdAt
+              }
+            }
+        `,
+          variables: {
+            title: postData.title,
+            content: postData.content,
+            imageUrl: imageUrl,
+          },
+        };
+
+        return fetch("http://localhost:8080/graphql", {
+          method: "POST",
+          body: JSON.stringify(graphqlQuery),
+          headers: {
+            Authorization: "Bearer " + this.props.token,
+            "Content-Type": "application/json",
+          },
+        });
+      })
+
+      /*
+
+      ------------------------- Reason of using CreatePost inside mutation -------------------------
+
+
+
+      The error message you provided, "String cannot represent a non-string value,"
+      typically indicates that you are trying to provide a non-string value where
+      a string is expected in your GraphQL mutation. In your case, it seems that the
+      issue is in your front-end code when constructing the GraphQL mutation query.
+
+      You are trying to directly interpolate the title and content variables into the GraphQL query string. 
+
+      By using variables, you can pass the values of title and content as parameters to your GraphQL mutation 
+      without causing the "String cannot represent a non-string value" error. Make sure that the variable names
+      in the query match the variable names defined in the mutation.
+
+      Also, ensure that the variable $title and $content are of the correct type (String) as per your GraphQL schema.
+    */
+
       .then((res) => {
         return res.json();
       })
@@ -203,6 +247,7 @@ class Feed extends Component {
           content: resData.data.createPost.content,
           creator: resData.data.createPost.creator,
           createdAt: resData.data.createPost.createdAt,
+          imagePath: resData.data.createPost.imageUrl,
         };
 
         this.setState((prevState) => {
