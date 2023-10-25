@@ -93,62 +93,109 @@ module.exports = {
   },
 
   // createPost is an endpoint
-  createPost: async function (args, req) {
-    const { title, content, imageUrl } = args.postInput;
+  // createPost: async function (args, req) {
+  //   const { title, content, imageUrl } = args.postInput;
 
-    // check if user is authenticated
+  //   // check if user is authenticated
+  //   if (!req.isAuth) {
+  //     const error = new Error("Not authenticated!");
+  //     error.code = 401; // 401 is for authentication failed
+  //     throw error;
+  //   }
+
+  //   // Adding validation logic
+  //   const errors = [];
+  //   if (validator.isEmpty(title) || !validator.isLength(title, { min: 5 })) {
+  //     errors.push({ message: "Title is invalid." });
+  //   }
+  //   if (
+  //     validator.isEmpty(content) ||
+  //     !validator.isLength(content, { min: 5 })
+  //   ) {
+  //     errors.push({ message: "Content is invalid." });
+  //   }
+  //   if (errors.length > 0) {
+  //     const error = new Error("Invalid input.");
+  //     error.data = errors;
+  //     error.code = 422; // 422 is for invalid input
+  //     throw error;
+  //   }
+
+  //   // get my user
+  //   const user = User.findById(req.userId);
+  //   if (!user) {
+  //     const error = new Error("Invalid user.");
+  //     error.code = 401; // 401 is for authentication failed
+  //     throw error;
+  //   }
+
+  //   // create a new post
+  //   const post = new Post({
+  //     title: title,
+  //     content: content,
+  //     imageUrl: imageUrl,
+  //     creator: user,
+  //   });
+
+  //   // save the post
+  //   const createdPost = await post.save(); // It will return a promise with resolved value as the post object
+  //   // add post to user's posts
+  //   req.user.posts.push(createdPost);
+  //   await req.user.save();
+  //   // return the post
+  //   return {
+  //     ...createdPost._doc,
+  //     _id: createdPost._id.toString(),
+  //     createdAt: createdPost.createdAt.toISOString(),
+  //     updatedAt: createdPost.updatedAt.toISOString(),
+  //   }; // This is the post object that will be returned by the API
+  // },
+  createPost: async function ({ postInput }, req) {
     if (!req.isAuth) {
       const error = new Error("Not authenticated!");
-      error.code = 401; // 401 is for authentication failed
+      error.code = 401;
       throw error;
     }
-
-    // Adding validation logic
     const errors = [];
-    if (validator.isEmpty(title) || !validator.isLength(title, { min: 5 })) {
+    if (
+      validator.isEmpty(postInput.title) ||
+      !validator.isLength(postInput.title, { min: 5 })
+    ) {
       errors.push({ message: "Title is invalid." });
     }
     if (
-      validator.isEmpty(content) ||
-      !validator.isLength(content, { min: 5 })
+      validator.isEmpty(postInput.content) ||
+      !validator.isLength(postInput.content, { min: 5 })
     ) {
       errors.push({ message: "Content is invalid." });
     }
     if (errors.length > 0) {
       const error = new Error("Invalid input.");
       error.data = errors;
-      error.code = 422; // 422 is for invalid input
+      error.code = 422;
       throw error;
     }
-
-    // get my user
-    const user = User.findById(req.userId);
+    const user = await User.findById(req.userId);
     if (!user) {
       const error = new Error("Invalid user.");
-      error.code = 401; // 401 is for authentication failed
+      error.code = 401;
       throw error;
     }
-
-    // create a new post
     const post = new Post({
-      title: title,
-      content: content,
-      imageUrl: imageUrl,
-      creator: req.userId, // req.userId is set in the is-auth middleware
+      title: postInput.title,
+      content: postInput.content,
+      imageUrl: postInput.imageUrl,
+      creator: user,
     });
-
-    // save the post
-    const createdPost = await post.save(); // It will return a promise with resolved value as the post object
-    // add post to user's posts
-    req.user.posts.push(createdPost);
-    await req.user.save();
-    // return the post
+    const createdPost = await post.save();
+    user.posts.push(createdPost);
+    await user.save();
     return {
       ...createdPost._doc,
       _id: createdPost._id.toString(),
       createdAt: createdPost.createdAt.toISOString(),
       updatedAt: createdPost.updatedAt.toISOString(),
-    }; // This is the post object that will be returned by the API
+    };
   },
 
   posts: async function (args, req) {

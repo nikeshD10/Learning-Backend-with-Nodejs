@@ -38,15 +38,15 @@ module.exports = buildSchema(`
     password: String!
   }
 
-  type RootQuery {
-    login(email: String!, password: String!): AuthData!
-    posts: PostData!
-  }
-
   input PostInputData {
     title: String!
     content: String!
     imageUrl: String!
+  }
+
+  type RootQuery {
+    login(email: String!, password: String!): AuthData!
+    posts: PostData!
   }
 
   type RootMutation {
@@ -63,7 +63,7 @@ module.exports = buildSchema(`
 // userInput is a custom type defined in the schema and UserInputData is a custom type defined in the schema
 // UserInputData has 3 fields: email, name and password
 // User is a custom type defined in the schema
-// ! means the field is required
+// '!' means the field is required
 // schema is a reserved keyword
 // mutation is a reserved keyword
 // RootMutation is a custom type defined in the schema
