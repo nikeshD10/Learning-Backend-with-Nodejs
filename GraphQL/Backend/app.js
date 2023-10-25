@@ -1,5 +1,5 @@
 const path = require("path");
-
+const fs = require("fs");
 const express = require("express");
 const bodyParser = require("body-parser");
 const mongoose = require("mongoose");
@@ -9,6 +9,7 @@ const { graphqlHTTP } = require("express-graphql");
 const graphqlSchema = require("./graphql/schema");
 const graphqlResolver = require("./graphql/resolvers");
 const auth = require("./middleware/auth");
+const { v4: uuidv4 } = require("uuid");
 
 const app = express();
 
@@ -17,7 +18,7 @@ const fileStorage = multer.diskStorage({
     cb(null, "images");
   },
   filename: (req, file, cb) => {
-    cb(null, new Date().toISOString() + "-" + file.originalname);
+    cb(null, uuidv4());
   },
 });
 
@@ -66,6 +67,35 @@ app.use((req, res, next) => {
 
 app.use(auth); // will run on every request that reach graphql endpoint  but will not denie request but will set auth to false where we use that in resolvers.
 
+// This middleware is used to
+app.put("/post-image", (req, res, next) => {
+  // check if we are authenticated
+  if (!req.isAuth) {
+    const error = new Error("Not authenticated!");
+    error.code = 401; // 401 is for authentication failed
+    throw error;
+  }
+
+  // check if we don't have a file
+  if (!req.file) {
+    return res.status(200).json({ message: "No file provided!" });
+  }
+
+  // if we have a file  check for existence of body field called oldPath
+  // if it exists then we have to delete the old file
+  if (req.body.oldPath) {
+    clearImage(req.body.oldPath);
+  }
+
+  // return the path of the file
+  return res
+    .status(201)
+    .json({
+      message: "File stored.",
+      filePath: req.file.path.replace("\\", "/"),
+    }); // this is path where multer stored the file and will be used in frontend
+});
+
 app.use(
   "/graphql",
   graphqlHTTP({
@@ -106,3 +136,8 @@ mongoose
     app.listen(8080);
   })
   .catch((err) => console.log(err));
+
+const clearImage = (filePath) => {
+  filePath = path.join(__dirname, "..", filePath);
+  fs.unlink(filePath, (err) => console.log(err));
+};
