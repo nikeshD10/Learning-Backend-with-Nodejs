@@ -19,6 +19,7 @@ const Post = require("../models/post");
 const bcrypt = require("bcryptjs");
 const validator = require("validator");
 const jwt = require("jsonwebtoken");
+const { clearImage } = require("../util/file");
 module.exports = {
   // createUser is an endpoint
 
@@ -258,6 +259,156 @@ module.exports = {
       _id: post._id.toString(),
       createdAt: post.createdAt.toISOString(),
       updatedAt: post.updatedAt.toISOString(),
+    };
+  },
+
+  updatePost: async function ({ id, postInput }, req) {
+    // check if user is authenticated
+    console.log("Checking user is authenticated");
+    if (!req.isAuth) {
+      console.log("User is not authenticated");
+      const error = new Error("Not authenticated!");
+      error.code = 401; // 401 is for authentication failed
+      throw error;
+    }
+
+    // get the post
+
+    const post = await Post.findById(id).populate("creator"); // populate the creator field with the user object
+    // check if post exists
+    if (!post) {
+      console.log("Post not found");
+      const error = new Error("No post found!");
+      error.code = 404; // 404 is for not found
+      throw error;
+    }
+    // check if user is the creator of the post
+    if (post.creator._id.toString() !== req.userId.toString()) {
+      console.log("User is not the creator of the post");
+      const error = new Error("Not authorized!");
+      error.code = 403; // 403 is for forbidden
+      throw error;
+    }
+    // Adding validation logic
+    const errors = [];
+    if (
+      validator.isEmpty(postInput.title) ||
+      !validator.isLength(postInput.title, { min: 5 })
+    ) {
+      errors.push({ message: "Title is invalid." });
+    }
+    if (
+      validator.isEmpty(postInput.content) ||
+      !validator.isLength(postInput.content, { min: 5 })
+    ) {
+      errors.push({ message: "Content is invalid." });
+    }
+
+    if (errors.length > 0) {
+      console.log("Validation failed");
+      const error = new Error("Invalid input.");
+      error.data = errors;
+      error.code = 422; // 422 is for invalid input
+      throw error;
+    }
+    // update the post
+    post.title = postInput.title;
+    post.content = postInput.content;
+    if (postInput.imageUrl !== "undefined") {
+      console.log("Updating image");
+      post.imageUrl = postInput.imageUrl;
+    }
+    const updatedPost = await post.save();
+    console.log("Post updated");
+    console.log(updatedPost);
+    // return the post
+    return {
+      ...updatedPost._doc,
+      _id: updatedPost._id.toString(),
+      createdAt: updatedPost.createdAt.toISOString(),
+      updatedAt: updatedPost.updatedAt.toISOString(),
+    };
+  },
+
+  deletePost: async function ({ id }, req) {
+    // check if user is authenticated
+    if (!req.isAuth) {
+      const error = new Error("Not authenticated!");
+      error.code = 401; // 401 is for authentication failed
+      throw error;
+    }
+
+    // get the post
+    const post = await Post.findById(id);
+    // check if post exists
+    if (!post) {
+      const error = new Error("No post found!");
+      error.code = 404; // 404 is for not found
+      throw error;
+    }
+    // check if user is the creator of the post
+    if (post.creator.toString() !== req.userId.toString()) {
+      const error = new Error("Not authorized!");
+      error.code = 403; // 403 is for forbidden
+      throw error;
+    }
+
+    // delete the post
+    clearImage(post.imageUrl);
+    await Post.findByIdAndRemove(id);
+    // delete the post from the user's posts
+    const user = await User.findById(req.userId);
+    user.posts.pull(id);
+    await user.save();
+    // return true
+    return true;
+  },
+  user: async function (args, req) {
+    // check if user is authenticated
+    if (!req.isAuth) {
+      const error = new Error("Not authenticated!");
+      error.code = 401; // 401 is for authentication failed
+      throw error;
+    }
+    // get the user
+    const user = await User.findById(req.userId);
+    // check if user exists
+    if (!user) {
+      const error = new Error("No user found!");
+      error.code = 404; // 404 is for not found
+      throw error;
+    }
+    // return the user
+    return {
+      ...user._doc,
+      _id: user._id.toString(),
+    };
+  },
+
+  updateStatus: async function ({ status }, req) {
+    // check if user is authenticated
+    if (!req.isAuth) {
+      const error = new Error("Not authenticated!");
+      error.code = 401; // 401 is for authentication failed
+      throw error;
+    }
+
+    // get the user
+    const user = await User.findById(req.userId);
+    // check if user exists
+    if (!user) {
+      const error = new Error("No user found!");
+      error.code = 404; // 404 is for not found
+      throw error;
+    }
+
+    // update the status
+    user.status = status;
+    await user.save();
+    // return the user
+    return {
+      ...user._doc,
+      _id: user._id.toString(),
     };
   },
 };

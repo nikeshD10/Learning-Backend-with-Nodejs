@@ -10,6 +10,7 @@ const graphqlSchema = require("./graphql/schema");
 const graphqlResolver = require("./graphql/resolvers");
 const auth = require("./middleware/auth");
 const { v4: uuidv4 } = require("uuid");
+const { clearImage } = require("./util/file");
 
 const app = express();
 
@@ -18,7 +19,13 @@ const fileStorage = multer.diskStorage({
     cb(null, "images");
   },
   filename: (req, file, cb) => {
-    cb(null, uuidv4());
+    const mapImage = {
+      "image/png": ".png",
+      "image/jpg": ".jpg",
+      "image/jpeg": ".jpeg",
+    };
+    const ext = mapImage[file.mimetype];
+    cb(null, uuidv4() + ext);
   },
 });
 
@@ -88,12 +95,10 @@ app.put("/post-image", (req, res, next) => {
   }
 
   // return the path of the file
-  return res
-    .status(201)
-    .json({
-      message: "File stored.",
-      filePath: req.file.path.replace("\\", "/"),
-    }); // this is path where multer stored the file and will be used in frontend
+  return res.status(201).json({
+    message: "File stored.",
+    filePath: req.file.path.replace("\\", "/"),
+  }); // this is path where multer stored the file and will be used in frontend
 });
 
 app.use(
@@ -136,8 +141,3 @@ mongoose
     app.listen(8080);
   })
   .catch((err) => console.log(err));
-
-const clearImage = (filePath) => {
-  filePath = path.join(__dirname, "..", filePath);
-  fs.unlink(filePath, (err) => console.log(err));
-};
