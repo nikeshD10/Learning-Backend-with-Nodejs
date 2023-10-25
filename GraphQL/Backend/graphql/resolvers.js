@@ -140,8 +140,8 @@ module.exports = {
   //   // save the post
   //   const createdPost = await post.save(); // It will return a promise with resolved value as the post object
   //   // add post to user's posts
-  //   req.user.posts.push(createdPost);
-  //   await req.user.save();
+  //   user.posts.push(createdPost);
+  //   await user.save();
   //   // return the post
   //   return {
   //     ...createdPost._doc,
